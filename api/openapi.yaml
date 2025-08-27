@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: Device Management API
+  description: |-
+    API for managing an inventory of mobile devices. 
+
+    Some useful links:
+    - [Device Manager repository](https://github.com/tiagos4ntos/device-manager)
+    - [The source API definition for the Device Manager](https://github.com/tiagos4ntos/device-manager/blob/main/api/openapi.yaml)
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com/v1
+tags:
+  - name: device
+    description: CRUD operation for device
+
+
+paths:
+  /devices:
+    get:
+      tags:
+       - device
+      summary: List all devices (with optional filters)
+      parameters:
+        - name: brand
+          in: query
+          schema:
+            type: string
+          description: Filter devices by brand
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [available, in-use, inactive]
+          description: Filter devices by state
+      responses:
+        '200':
+          description: A list of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+    post:
+      tags:
+       - device
+      summary: Create a new device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceInput'
+      responses:
+        '201':
+          description: Device created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  /devices/{id}:
+    get:
+      tags:
+       - device
+      summary: Get a device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+      required:
+        - id
+    put:
+      tags:
+       - device
+      summary: Fully update a device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceInput'
+      responses:
+        '200':
+          description: Device updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+    patch:
+      tags:
+       - device
+      summary: Partially update a device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Partial fields to update
+      responses:
+        '200':
+          description: Device partially updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+    delete:
+      tags:
+       - device
+      summary: Delete a device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Device deleted
+        '404':
+          description: Device not found
+
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1ed8d5f5-ddb6-4c83-8c77-2e87b9e306af"
+        name:
+          type: string
+          example: "Galaxy S23 FE"
+        brand:
+          type: string
+          example: "Samsumg"
+        state:
+          type: string
+          enum: [available, in-use, inactive]
+          example: "available"
+        creationTime:
+          type: string
+          format: date-time
+          example: "2025-08-26T21:00:00Z"
+      required: [id, name, brand, state, creationTime]
+
+    DeviceInput:
+      type: object
+      properties:
+        name:
+          type: string
+        brand:
+          type: string
+        state:
+          type: string
+          enum: [available, in-use, inactive]
+      required: [name, brand, state]
