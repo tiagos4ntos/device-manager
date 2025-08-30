@@ -24,9 +24,6 @@ func main() {
 	}
 	defer psqlConn.Close()
 
-	// Run DB migrations
-	database.MigrateUp(psqlConn)
-
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
