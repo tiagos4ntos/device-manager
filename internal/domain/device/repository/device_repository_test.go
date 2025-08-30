@@ -549,7 +549,7 @@ func Test_List_Devices(t *testing.T) {
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
-							AddRow(uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"), "Galaxy S23 FE", "Samsumg", entity.Avaiable, createdAt, nil, nil).
+							AddRow(uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"), "Galaxy S23 FE", "Samsumg", entity.Available, createdAt, nil, nil).
 							AddRow(uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"), "IPhone 15", "Apple", entity.InUse, createdAt, createdAt, nil))
 			},
 			args:      testArgs,
@@ -559,7 +559,7 @@ func Test_List_Devices(t *testing.T) {
 					ID:           uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"),
 					Name:         "Galaxy S23 FE",
 					Brand:        "Samsumg",
-					State:        entity.Avaiable,
+					State:        entity.Available,
 					CreationTime: createdAt,
 				},
 				{
@@ -618,7 +618,7 @@ func Test_List_Devices(t *testing.T) {
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
-							AddRow(uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"), "Galaxy S23 FE", "Samsumg", entity.Avaiable, createdAt, nil, nil).
+							AddRow(uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"), "Galaxy S23 FE", "Samsumg", entity.Available, createdAt, nil, nil).
 							AddRow(uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"), "IPhone 15", "Apple", entity.InUse, createdAt, createdAt, nil).
 							RowError(1, fmt.Errorf("some error")))
 			},

@@ -8,7 +8,7 @@ import (
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/entity"
 )
 
-//go:generate mockgen -source=device.go -destination=../../mocks/device_repository_mock.go -package=mocks
+//go:generate mockgen -source=device_repository.go -destination=../../mocks/device_repository_mock.go -package=mocks
 
 type DeviceRepository interface {
 	CreateDevice(ctx context.Context, device *entity.Device) error

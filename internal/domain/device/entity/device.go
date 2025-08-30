@@ -9,9 +9,9 @@ import (
 type DeviceStatus string
 
 const (
-	Avaiable DeviceStatus = "available"
-	InUse    DeviceStatus = "in-use"
-	Inactive DeviceStatus = "inactive"
+	Available DeviceStatus = "available"
+	InUse     DeviceStatus = "in-use"
+	Inactive  DeviceStatus = "inactive"
 )
 
 func (ds DeviceStatus) String() string {
