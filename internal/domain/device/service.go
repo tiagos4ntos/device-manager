@@ -39,14 +39,14 @@ func (s *deviceService) List(ctx context.Context) ([]entity.Device, error) {
 func (s *deviceService) GetByID(ctx context.Context, id uuid.UUID) (entity.Device, error) {
 	device, err := s.repo.GetDeviceByID(ctx, id)
 	if err != nil {
-		return entity.Device{}, err
-	}
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("device not found: (%v)", id)
+			return entity.Device{}, errors.New("device not found")
+		}
 
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("device not found: (%v)", id)
-		return entity.Device{}, errors.New("device not found")
+		log.Printf("error when search device by id: (%v)", id)
+		return entity.Device{}, errors.New("error on searching device by id")
 	}
-
 	return device, nil
 }
 
@@ -61,9 +61,12 @@ func (s *deviceService) Create(ctx context.Context, device entity.Device) (entit
 }
 
 func (s *deviceService) Update(ctx context.Context, device entity.Device) (entity.Device, error) {
+	//TODO: Refactor this method to avoid possible race conditions when 2 requests to update a same device are made simultaneously
+
 	baseDevice, err := s.repo.GetDeviceByID(ctx, device.ID)
 	if err != nil {
-		return entity.Device{}, err
+		log.Printf("error getting device by id: (%v)", err)
+		return entity.Device{}, errors.New("something went wrong while retrieving device")
 	}
 
 	//If device is in use, only status can be updated
