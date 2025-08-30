@@ -4,14 +4,16 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	AppName    string
-	ServerPort string
+	AppName     string
+	ServerPort  string
+	HttpTimeout int
 
 	DatabaseHost string
 	DatabasePort string
@@ -40,8 +42,9 @@ func LoadConfig() *Config {
 		}
 
 		cfg = &Config{
-			AppName:    getEnvOrDefaultValue("APP_NAME", DefaultAppName),
-			ServerPort: getEnvOrDefaultValue("SERVER_PORT", "8080"),
+			AppName:     getEnvOrDefaultValue("APP_NAME", DefaultAppName),
+			ServerPort:  getEnvOrDefaultValue("SERVER_PORT", "8080"),
+			HttpTimeout: getIntFromValue(getEnvOrDefaultValue("HTTP_TIMEOUT_IN_SECONDS", "10")),
 
 			DatabaseHost: getEnvOrDefaultValue("DATABASE_HOST", DefaultPostgresHost),
 			DatabasePort: getEnvOrDefaultValue("DATABASE_PORT", DefaultPostgresPort),
@@ -54,7 +57,9 @@ func LoadConfig() *Config {
 }
 
 func (c *Config) Validate() error {
-
+	if c.ServerPort == "" {
+		return errors.New("server port is required")
+	}
 	if c.DatabaseHost == "" {
 		return errors.New("database host is required")
 	}
@@ -78,4 +83,13 @@ func getEnvOrDefaultValue(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func getIntFromValue(value string) int {
+	intValue, err := strconv.Atoi(value)
+
+	if err != nil {
+		return 0
+	}
+	return intValue
 }
