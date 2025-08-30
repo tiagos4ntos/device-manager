@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: device-manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - device_manager_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: device-manager-api:local
+    depends_on:
+      - postgres
+    env_file:
+      .env
+    ports:
+      - "8080:8080"
+    networks:
+      - device_manager_net
+
+volumes:
+  pgdata:
+
+networks:
+  device_manager_net:
+    external: true
