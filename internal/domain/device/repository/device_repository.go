@@ -46,7 +46,7 @@ func (r *postegresDeviceRepository) CreateDevice(ctx context.Context, device *en
 			device.Brand,
 			device.State.String(),
 		).
-		Scan(&device.ID, &device.CreationTime, &device.UpdatedAt, &device.DeletedAt)
+		Scan(&device.ID, &device.CreatedAt, &device.UpdatedAt, &device.DeletedAt)
 
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (r *postegresDeviceRepository) GetDeviceByID(ctx context.Context, id uuid.U
 		&device.Name,
 		&device.Brand,
 		&device.State,
-		&device.CreationTime,
+		&device.CreatedAt,
 		&device.UpdatedAt,
 		&device.DeletedAt)
 	if err != nil {
@@ -144,7 +144,7 @@ func (r *postegresDeviceRepository) UpdateDeviceState(ctx context.Context, devic
 		&device.Name,
 		&device.Brand,
 		&device.State,
-		&device.CreationTime,
+		&device.CreatedAt,
 		&device.UpdatedAt,
 		&device.DeletedAt,
 	)
@@ -210,7 +210,7 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context) ([]entity.D
 			&d.Name,
 			&d.Brand,
 			&d.State,
-			&d.CreationTime,
+			&d.CreatedAt,
 			&d.UpdatedAt,
 			&d.DeletedAt)
 

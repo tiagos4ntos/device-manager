@@ -17,11 +17,11 @@ import (
 
 func makeExpectedDeviceRecord() entity.Device {
 	return entity.Device{
-		ID:           uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"),
-		Name:         "Galaxy S23 FE",
-		Brand:        "Samsumg",
-		State:        "available",
-		CreationTime: lo.Must(time.Parse(time.DateTime, "2025-08-31 15:01:02")),
+		ID:        uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"),
+		Name:      "Galaxy S23 FE",
+		Brand:     "Samsumg",
+		State:     "available",
+		CreatedAt: lo.Must(time.Parse(time.DateTime, "2025-08-31 15:01:02")),
 	}
 }
 
@@ -556,19 +556,19 @@ func Test_List_Devices(t *testing.T) {
 			wantedErr: nil,
 			wantedResult: []entity.Device{
 				{
-					ID:           uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"),
-					Name:         "Galaxy S23 FE",
-					Brand:        "Samsumg",
-					State:        entity.Available,
-					CreationTime: createdAt,
+					ID:        uuid.MustParse("b44ecc02-872e-4c18-8d2a-ac09dfc4b49a"),
+					Name:      "Galaxy S23 FE",
+					Brand:     "Samsumg",
+					State:     entity.Available,
+					CreatedAt: createdAt,
 				},
 				{
-					ID:           uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"),
-					Name:         "IPhone 15",
-					Brand:        "Apple",
-					State:        entity.InUse,
-					CreationTime: createdAt,
-					UpdatedAt:    &createdAt,
+					ID:        uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"),
+					Name:      "IPhone 15",
+					Brand:     "Apple",
+					State:     entity.InUse,
+					CreatedAt: createdAt,
+					UpdatedAt: &createdAt,
 				},
 			},
 		},
