@@ -10,8 +10,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/entity"
+	"github.com/tiagos4ntos/device-manager/internal/domain/device/errors"
 	"github.com/tiagos4ntos/device-manager/internal/domain/mocks"
 )
+
+var errDatabaseGeneric = fmt.Errorf("some database error")
 
 func Test_List_Device(t *testing.T) {
 	type args struct {
@@ -53,8 +56,8 @@ func Test_List_Device(t *testing.T) {
 			name:                 "List Repository Error Case",
 			testArgs:             testArgs,
 			wantRepositoryResult: nil,
-			wantRepositoryErr:    fmt.Errorf("some database error"),
-			wantErr:              fmt.Errorf("something went wrong while listing devices"),
+			wantRepositoryErr:    errDatabaseGeneric,
+			wantErr:              errors.NewDeviceError(errors.ErrInternal, "something went wrong while listing devices", errDatabaseGeneric),
 		},
 	}
 
@@ -110,18 +113,18 @@ func Test_GetByID_Device(t *testing.T) {
 			wantErr:           nil,
 		},
 		{
-			name:                 "Create Device Repository Error Case",
+			name:                 "GetByID Device Repository Error Case",
 			testArgs:             testArgs,
 			wantRepositoryResult: entity.Device{},
-			wantRepositoryErr:    fmt.Errorf("some database error"),
-			wantErr:              fmt.Errorf("error on searching device by id"),
+			wantRepositoryErr:    errDatabaseGeneric,
+			wantErr:              errors.NewDeviceError(errors.ErrInternal, "something went wrong while retrieving device", errDatabaseGeneric),
 		},
 		{
-			name:                 "Create Device Not Found Case",
+			name:                 "GetByID Device Not Found Case",
 			testArgs:             testArgs,
 			wantRepositoryResult: entity.Device{},
 			wantRepositoryErr:    sql.ErrNoRows,
-			wantErr:              fmt.Errorf("device not found"),
+			wantErr:              errors.NewDeviceError(errors.ErrNotFound, "device not found", sql.ErrNoRows),
 		},
 	}
 
@@ -181,8 +184,8 @@ func Test_Create_Device(t *testing.T) {
 				Brand: "Apple",
 				State: entity.Available,
 			},
-			wantedRepositoryErr: fmt.Errorf("some database error"),
-			wantErr:             fmt.Errorf("something went wrong while create device"),
+			wantedRepositoryErr: errDatabaseGeneric,
+			wantErr:             errors.NewDeviceError(errors.ErrInternal, "something went wrong while creating device", errDatabaseGeneric),
 		},
 	}
 
@@ -260,9 +263,9 @@ func Test_Update_Device(t *testing.T) {
 			},
 			updateOnlyStatus:        false,
 			wantedRepoGetByIdResult: entity.Device{},
-			wantedRepoGetByIdError:  fmt.Errorf("some database error"),
+			wantedRepoGetByIdError:  errDatabaseGeneric,
 			wantedRepoUpdateErr:     nil,
-			wantErr:                 fmt.Errorf("something went wrong while retrieving device"),
+			wantErr:                 errors.NewDeviceError(errors.ErrNotFound, "something went wrong while retrieving device", errDatabaseGeneric),
 		},
 		{
 			name:     "Update Only Device Not Occur When In Use Case",
@@ -282,7 +285,7 @@ func Test_Update_Device(t *testing.T) {
 			},
 			wantedRepoGetByIdError: nil,
 			wantedRepoUpdateErr:    nil,
-			wantErr:                fmt.Errorf("device is in use and cannot be updated"),
+			wantErr:                errors.NewDeviceError(errors.ErrInvalid, "device is in use and cannot be updated", fmt.Errorf("device state is the same: %s", entity.InUse)),
 		},
 		{
 			name:     "Update Only Device State with Success",
@@ -321,8 +324,8 @@ func Test_Update_Device(t *testing.T) {
 				State: entity.InUse,
 			},
 			wantedRepoGetByIdError: nil,
-			wantedRepoUpdateErr:    fmt.Errorf("some database error"),
-			wantErr:                fmt.Errorf("something went wrong while update device state"),
+			wantedRepoUpdateErr:    errDatabaseGeneric,
+			wantErr:                errors.NewDeviceError(errors.ErrInternal, "something went wrong while update device state", fmt.Errorf("error updating device state: %v", errDatabaseGeneric)),
 		},
 		{
 			name:     "Update Only Device State with Expected Error",
@@ -341,8 +344,8 @@ func Test_Update_Device(t *testing.T) {
 				State: entity.Available,
 			},
 			wantedRepoGetByIdError: nil,
-			wantedRepoUpdateErr:    fmt.Errorf("some database error"),
-			wantErr:                fmt.Errorf("something went wrong while fully update device"),
+			wantedRepoUpdateErr:    errDatabaseGeneric,
+			wantErr:                errors.NewDeviceError(errors.ErrInternal, "something went wrong while fully update device", errDatabaseGeneric),
 		},
 	}
 
@@ -410,8 +413,8 @@ func Test_Delete_Device(t *testing.T) {
 			name:                "Delete Device Repository Error Case",
 			testArgs:            testArgs,
 			deviceId:            uuid.MustParse("215f759c-aa0f-494f-84ba-0d706dd6d59a"),
-			wantedRepositoryErr: fmt.Errorf("some database error"),
-			wantErr:             fmt.Errorf("something went wrong while delete device"),
+			wantedRepositoryErr: errDatabaseGeneric,
+			wantErr:             errors.NewDeviceError(errors.ErrInternal, "something went wrong while delete device", errDatabaseGeneric),
 		},
 	}
 

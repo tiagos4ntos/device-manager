@@ -9,6 +9,7 @@ import (
 	"github.com/tiagos4ntos/device-manager/internal/domain/device"
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/entity"
 	"github.com/tiagos4ntos/device-manager/internal/network/dto"
+	errorhandler "github.com/tiagos4ntos/device-manager/internal/network/errors"
 )
 
 type DeviceHandler interface {
@@ -35,7 +36,7 @@ func (h *deviceHandler) List() echo.HandlerFunc {
 		devices, err := h.deviceService.List(context.Background())
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return errorhandler.Handle(c, err)
 		}
 
 		result := make([]dto.DeviceResponse, 0)
@@ -59,19 +60,18 @@ func (h *deviceHandler) List() echo.HandlerFunc {
 func (h *deviceHandler) GetByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
-		if id == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "you must inform the device id")
-		}
 
-		deviceID, err := uuid.Parse(id)
+		//validate id is not empty and is a valid uuid
+		deviceID, err := parseAndValidateDeviceId(id)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid device id format, must be an uuid")
+			return errorhandler.Handle(c, err)
 		}
 
+		// fetch device by id
 		device, err := h.deviceService.GetByID(context.Background(), deviceID)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return errorhandler.Handle(c, err)
 		}
 
 		result := dto.DeviceResponse{
@@ -108,17 +108,28 @@ func (h *deviceHandler) Create() echo.HandlerFunc {
 		deviceCreated, err := h.deviceService.Create(context.Background(), device)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return errorhandler.Handle(c, err)
 		}
 
 		result := dto.DeviceResponse{
 			ID:        deviceCreated.ID.String(),
 			Name:      deviceCreated.Name,
 			Brand:     deviceCreated.Brand,
-			State:     string(deviceCreated.State),
-			CreatedAt: device.CreatedAt,
+			State:     deviceCreated.State.String(),
+			CreatedAt: deviceCreated.CreatedAt,
 		}
 
 		return c.JSON(http.StatusCreated, result)
 	}
+}
+
+func parseAndValidateDeviceId(id string) (uuid.UUID, error) {
+	if id == "" {
+		return uuid.Nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "you must inform the device id", nil)
+	}
+	deviceID, err := uuid.Parse(id)
+	if err != nil {
+		return uuid.Nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid device id format, must be an uuid", nil)
+	}
+	return deviceID, nil
 }
