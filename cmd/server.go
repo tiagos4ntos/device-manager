@@ -17,7 +17,22 @@ import (
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/repository"
 	"github.com/tiagos4ntos/device-manager/internal/network/handler"
 	"github.com/tiagos4ntos/device-manager/internal/network/router"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/tiagos4ntos/device-manager/docs"
 )
+
+// @title Device Manager API
+// @version 0.0.1-beta
+// @description API for managing an inventory of mobile devices.
+// @conact.name Tiago Santos
+// @contact.url https://tiagos4ntos.github.io
+// @contact.email tiago482@gmail.com
+// @license.name APACHE 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @termsOfService http://swagger.io/terms/
+// @host localhost:8080
+// @BasePath /
 
 func main() {
 	cfg := config.LoadConfig()
@@ -48,25 +63,8 @@ func main() {
 	// initialize echo server
 	e := echo.New()
 
-	// echo settings
-	e.Debug = false
-	e.DisableHTTP2 = true
-	e.HideBanner = true
-	e.HidePort = true
-	e.Server.ReadTimeout = time.Duration(cfg.HttpTimeout) * time.Second
-	e.Server.WriteTimeout = time.Duration(cfg.HttpTimeout) * time.Second
-
-	// echo midlewares
-	e.Use(middleware.RequestID())
-	e.Use(middleware.Recover())
-	e.Use(middleware.Logger())
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Timeout: time.Duration(cfg.HttpTimeout) * time.Second,
-	}))
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-	}))
+	// echo settings, middlewares and documentation endpoint
+	configureEcho(e, cfg)
 
 	// initialize device handler
 	deviceHandler := handler.NewDeviceHandler(deviceService)
@@ -89,4 +87,26 @@ func main() {
 	if err := e.Shutdown(context.Background()); err != nil {
 		e.Logger.Fatal("Shutdown failed:", err)
 	}
+}
+
+func configureEcho(e *echo.Echo, cfg *config.Config) {
+	e.Debug = false
+	e.DisableHTTP2 = true
+	e.HideBanner = true
+	e.HidePort = true
+	e.Server.ReadTimeout = time.Duration(cfg.HttpTimeout) * time.Second
+	e.Server.WriteTimeout = time.Duration(cfg.HttpTimeout) * time.Second
+
+	e.Use(middleware.RequestID())
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: time.Duration(cfg.HttpTimeout) * time.Second,
+	}))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+	}))
+
+	e.GET("/api/*", echoSwagger.WrapHandler)
 }

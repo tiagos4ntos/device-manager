@@ -43,6 +43,10 @@ func mapApiErrorsToStatusCode(t ApiErrorType) int {
 	}
 }
 
-func ErrorResponse(msg string) map[string]string {
-	return map[string]string{"error": msg}
+func ErrorResponse(msg string) DefaultErrorResult {
+	return DefaultErrorResult{Error: msg}
+}
+
+type DefaultErrorResult struct {
+	Error string `json:"error"`
 }

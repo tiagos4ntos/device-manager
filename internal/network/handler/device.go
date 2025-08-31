@@ -28,9 +28,17 @@ func NewDeviceHandler(service device.DeviceService) DeviceHandler {
 	return &deviceHandler{
 		deviceService: service,
 	}
-
 }
 
+// List godoc
+// @Summary List devices
+// @Description Get all devices
+// @Tags devices
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.DeviceResponse
+// @Failure 500 {object} errors.DefaultErrorResult
+// @Router /devices [get]
 func (h *deviceHandler) List() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		devices, err := h.deviceService.List(context.Background())
@@ -57,6 +65,17 @@ func (h *deviceHandler) List() echo.HandlerFunc {
 	}
 }
 
+// GetDeviceByID godoc
+// @Summary      Get device by ID
+// @Description  Returns a single device by its ID
+// @Tags         devices
+// @Produce      json
+// @Param        id   path      string  true  "Device ID"
+// @Success      200  {object}  dto.DeviceResponse
+// @Failure      400  {object}  errors.DefaultErrorResult
+// @Failure      404  {object}  errors.DefaultErrorResult
+// @Failure      500  {object}  errors.DefaultErrorResult
+// @Router       /devices/{id} [get]
 func (h *deviceHandler) GetByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
@@ -88,6 +107,17 @@ func (h *deviceHandler) GetByID() echo.HandlerFunc {
 	}
 }
 
+// CreateDevice godoc
+// @Summary      Create a new device
+// @Description  Registers a new device on the database with the provided information
+// @Tags         devices
+// @Accept       json
+// @Produce      json
+// @Param        device  body      dto.CreateDeviceRequest  true  "Device payload"
+// @Success      201     {object}  dto.DeviceResponse
+// @Failure      400     {object}  errors.DefaultErrorResult
+// @Failure      500     {object}  errors.DefaultErrorResult
+// @Router       /devices [post]
 func (h *deviceHandler) Create() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req dto.CreateDeviceRequest
@@ -123,6 +153,18 @@ func (h *deviceHandler) Create() echo.HandlerFunc {
 	}
 }
 
+// Update godoc
+// @Summary      Updates device data by ID
+// @Description  Update an existing device name and brand but only when the state is not "in-use", the fiel state can be updated anytime
+// @Tags         devices
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Device ID"
+// @Param        device  body      dto.UpdateDeviceRequest  true  "Updated device payload"
+// @Success      200     {object}  dto.DeviceResponse
+// @Failure      400     {object}  errors.DefaultErrorResult
+// @Failure      500     {object}  errors.DefaultErrorResult
+// @Router       /devices/{id} [put]
 func (h *deviceHandler) Update() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
@@ -167,6 +209,16 @@ func (h *deviceHandler) Update() echo.HandlerFunc {
 	}
 }
 
+// DeleteDevice godoc
+// @Summary      Delete a device
+// @Description  Removes a device by ID, only devices that are not "in-use" can be deleted
+// @Tags         devices
+// @Produce      json
+// @Param        id   path      string  true  "Device ID"
+// @Success      204  "No Content"
+// @Failure      404  {object}  errors.DefaultErrorResult
+// @Failure      500  {object}  errors.DefaultErrorResult
+// @Router       /devices/{id} [delete]
 func (h *deviceHandler) Delete() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
