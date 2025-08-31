@@ -48,7 +48,7 @@ func main() {
 	// initialize echo server
 	e := echo.New()
 
-	//echo settings
+	// echo settings
 	e.Debug = false
 	e.DisableHTTP2 = true
 	e.HideBanner = true
@@ -56,15 +56,24 @@ func main() {
 	e.Server.ReadTimeout = time.Duration(cfg.HttpTimeout) * time.Second
 	e.Server.WriteTimeout = time.Duration(cfg.HttpTimeout) * time.Second
 
-	e.Use(middleware.Logger())
+	// echo midlewares
+	e.Use(middleware.RequestID())
 	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: time.Duration(cfg.HttpTimeout) * time.Second,
+	}))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+	}))
 
-	//initialize device handler
+	// initialize device handler
 	deviceHandler := handler.NewDeviceHandler(deviceService)
 
 	router.RegisterRoutes(e, deviceHandler)
 
-	// Create a context that cancels on SIGINT/SIGTERM/os.Interrupt
+	// create a context that cancels on SIGINT/SIGTERM/os.Interrupt
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer stop()
 

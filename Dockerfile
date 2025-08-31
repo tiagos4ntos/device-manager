@@ -13,7 +13,9 @@ RUN go mod download
 COPY . .
 
 # Build the Go binary
-RUN go build -o main ./cmd/server.go
+RUN go build -a -tags netgo -o main ./cmd/server.go
+
+RUN chmod +x main
 
 EXPOSE 8080
 

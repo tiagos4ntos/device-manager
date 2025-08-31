@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15
-    container_name: my_postgres
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -13,15 +13,15 @@ services:
     networks:
       - device_manager_net
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: device-manager-api:local
+  api:
+    image: api:local
+    container_name: api
     depends_on:
       - postgres
     env_file:
       .env
+    tty:
+      true
     ports:
       - "8080:8080"
     networks:
