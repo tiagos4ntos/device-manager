@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/tiagos4ntos/device-manager/internal/domain/device"
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/entity"
@@ -12,7 +13,10 @@ import (
 
 type DeviceHandler interface {
 	List() echo.HandlerFunc
+	GetByID() echo.HandlerFunc
 	Create() echo.HandlerFunc
+	// Update() echo.HandlerFunc
+	// Delete() echo.HandlerFunc
 }
 
 type deviceHandler struct {
@@ -24,37 +28,6 @@ func NewDeviceHandler(service device.DeviceService) DeviceHandler {
 		deviceService: service,
 	}
 
-}
-
-func (h *deviceHandler) Create() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var req dto.CreateDeviceRequest
-		if err := c.Bind(&req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "you must inform all required parameters")
-		}
-
-		device := entity.Device{
-			Name:  req.Name,
-			Brand: req.Brand,
-			State: entity.DeviceStatus(req.State),
-		}
-
-		deviceCreated, err := h.deviceService.Create(context.Background(), device)
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		result := dto.DeviceResponse{
-			ID:        deviceCreated.ID.String(),
-			Name:      deviceCreated.Name,
-			Brand:     deviceCreated.Brand,
-			State:     string(deviceCreated.State),
-			CreatedAt: device.CreatedAt,
-		}
-
-		return c.JSON(http.StatusCreated, result)
-	}
 }
 
 func (h *deviceHandler) List() echo.HandlerFunc {
@@ -80,5 +53,72 @@ func (h *deviceHandler) List() echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, result)
+	}
+}
+
+func (h *deviceHandler) GetByID() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+		if id == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "you must inform the device id")
+		}
+
+		deviceID, err := uuid.Parse(id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid device id format, must be an uuid")
+		}
+
+		device, err := h.deviceService.GetByID(context.Background(), deviceID)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		result := dto.DeviceResponse{
+			ID:        device.ID.String(),
+			Name:      device.Name,
+			Brand:     device.Brand,
+			State:     string(device.State),
+			CreatedAt: device.CreatedAt,
+			UpdatedAt: device.UpdatedAt,
+			DeletedAt: device.DeletedAt,
+		}
+
+		return c.JSON(http.StatusOK, result)
+	}
+}
+
+func (h *deviceHandler) Create() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var req dto.CreateDeviceRequest
+		if err := c.Bind(&req); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "you must inform all required parameters")
+		}
+
+		if err := req.Validate(); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		device := entity.Device{
+			Name:  req.Name,
+			Brand: req.Brand,
+			State: entity.DeviceState(req.State),
+		}
+
+		deviceCreated, err := h.deviceService.Create(context.Background(), device)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		result := dto.DeviceResponse{
+			ID:        deviceCreated.ID.String(),
+			Name:      deviceCreated.Name,
+			Brand:     deviceCreated.Brand,
+			State:     string(deviceCreated.State),
+			CreatedAt: device.CreatedAt,
+		}
+
+		return c.JSON(http.StatusCreated, result)
 	}
 }
