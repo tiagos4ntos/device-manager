@@ -226,7 +226,7 @@ func Test_Fully_Update_Device(t *testing.T) {
 		state = $4,
 		updated_at = now()
 	WHERE id = $1 AND deleted_at IS NULL
-	RETURNING updated_at;`)
+	RETURNING id, created_at, updated_at, deleted_at;`)
 
 	updatedDevice := makeExpectedDeviceRecord()
 	updatedDevice.UpdatedAt = lo.ToPtr(deviceUpdatedAt)
@@ -256,8 +256,8 @@ func Test_Fully_Update_Device(t *testing.T) {
 					WillBeClosed().
 					ExpectQuery().
 					WithArgs(deviceToBeUpdated.ID, deviceToBeUpdated.Name, deviceToBeUpdated.Brand, deviceToBeUpdated.State.String()).
-					WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).
-						AddRow(deviceUpdatedAt))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "created_at", "updated_at", "deleted_at"}).
+						AddRow(updatedDevice.ID, updatedDevice.CreatedAt, deviceUpdatedAt, nil))
 			},
 			args:         testArgs,
 			wantedErr:    nil,

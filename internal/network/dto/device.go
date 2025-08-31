@@ -19,7 +19,7 @@ type CreateDeviceRequest struct {
 
 func (r CreateDeviceRequest) Validate() error {
 	if !validDeviceStatuses[r.State] {
-		return fmt.Errorf("invalid device status: %s", r.State)
+		return fmt.Errorf("invalid device state %s", r.State)
 	}
 	return nil
 }
@@ -35,8 +35,14 @@ type DeviceResponse struct {
 }
 
 type UpdateDeviceRequest struct {
-	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Brand string `json:"brand"`
-	State string `json:"state"`
+	State string `json:"state" validate:"required,oneof=available in-use inactive"`
+}
+
+func (r UpdateDeviceRequest) Validate() error {
+	if !validDeviceStatuses[r.State] {
+		return fmt.Errorf("invalid device state %s", r.State)
+	}
+	return nil
 }

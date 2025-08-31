@@ -95,7 +95,7 @@ func (r *postegresDeviceRepository) FullyUpdateDevice(ctx context.Context, devic
 		state = $4,
 		updated_at = now()
 	WHERE id = $1 AND deleted_at IS NULL
-	RETURNING updated_at;`
+	RETURNING id, created_at, updated_at, deleted_at;`
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -110,7 +110,10 @@ func (r *postegresDeviceRepository) FullyUpdateDevice(ctx context.Context, devic
 		device.Brand,
 		device.State.String(),
 	).Scan(
+		&device.ID,
+		&device.CreatedAt,
 		&device.UpdatedAt,
+		&device.DeletedAt,
 	)
 
 	if err != nil {

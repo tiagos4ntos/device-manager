@@ -13,7 +13,7 @@ func Handle(c echo.Context, err error) error {
 
 	switch e := err.(type) {
 	case *ApiError:
-		return c.JSON(mapApiErrorsToStatusCode(e.Type), ErrorResponse(e.Message))
+		return c.JSON(mapApiErrorsToStatusCode(e.Type), ErrorResponse(e.Error()))
 	case *deviceerrors.DeviceError:
 		return c.JSON(mapDomainErrorsToStatusCode(e.Type), ErrorResponse(e.Message))
 	default:

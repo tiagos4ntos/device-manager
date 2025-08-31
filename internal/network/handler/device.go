@@ -16,7 +16,7 @@ type DeviceHandler interface {
 	List() echo.HandlerFunc
 	GetByID() echo.HandlerFunc
 	Create() echo.HandlerFunc
-	// Update() echo.HandlerFunc
+	Update() echo.HandlerFunc
 	// Delete() echo.HandlerFunc
 }
 
@@ -92,11 +92,11 @@ func (h *deviceHandler) Create() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req dto.CreateDeviceRequest
 		if err := c.Bind(&req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "you must inform all required parameters")
+			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "you must inform all required parameters", nil))
 		}
 
 		if err := req.Validate(); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "validation error", err))
 		}
 
 		device := entity.Device{
@@ -120,6 +120,50 @@ func (h *deviceHandler) Create() echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusCreated, result)
+	}
+}
+
+func (h *deviceHandler) Update() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+
+		deviceID, err := parseAndValidateDeviceId(id)
+		if err != nil {
+			return errorhandler.Handle(c, err)
+		}
+
+		var req dto.UpdateDeviceRequest
+		if err := c.Bind(&req); err != nil {
+			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "you must inform all required parameters", err))
+		}
+
+		if err := req.Validate(); err != nil {
+			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "validation error", err))
+		}
+
+		device := entity.Device{
+			ID:    deviceID,
+			Name:  req.Name,
+			Brand: req.Brand,
+			State: entity.DeviceState(req.State),
+		}
+
+		updatedDevice, err := h.deviceService.Update(context.Background(), device)
+
+		if err != nil {
+			return errorhandler.Handle(c, err)
+		}
+
+		result := dto.DeviceResponse{
+			ID:        updatedDevice.ID.String(),
+			Name:      updatedDevice.Name,
+			Brand:     updatedDevice.Brand,
+			State:     updatedDevice.State.String(),
+			CreatedAt: updatedDevice.CreatedAt,
+			UpdatedAt: updatedDevice.UpdatedAt,
+			DeletedAt: updatedDevice.DeletedAt,
+		}
+		return c.JSON(http.StatusOK, result)
 	}
 }
 

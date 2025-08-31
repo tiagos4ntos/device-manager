@@ -9,6 +9,6 @@ func RegisterRoutes(e *echo.Echo, dh handler.DeviceHandler) {
 	e.POST("/devices", dh.Create())
 	e.GET("/devices", dh.List())
 	e.GET("/devices/:id", dh.GetByID())
-	// e.PUT("/devices/:id", dh.Update())
+	e.PUT("/devices/:id", dh.Update())
 	// e.DELETE("/devices/:id", dh.Delete())
 }
