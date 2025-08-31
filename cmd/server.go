@@ -36,6 +36,9 @@ func main() {
 	}
 	defer psqlConn.Close()
 
+	// run database migrations
+	database.MigrateUp(psqlConn)
+
 	// initialize device repository
 	deviceRepository := repository.NewDeviceRepository(psqlConn)
 
