@@ -6,24 +6,24 @@ import (
 	"github.com/google/uuid"
 )
 
-type DeviceStatus string
+type DeviceState string
 
 const (
-	Available DeviceStatus = "available"
-	InUse     DeviceStatus = "in-use"
-	Inactive  DeviceStatus = "inactive"
+	Available DeviceState = "available"
+	InUse     DeviceState = "in-use"
+	Inactive  DeviceState = "inactive"
 )
 
-func (ds DeviceStatus) String() string {
+func (ds DeviceState) String() string {
 	return string(ds)
 }
 
 type Device struct {
-	ID        uuid.UUID    `json:"id"`
-	Name      string       `json:"name"`
-	Brand     string       `json:"brand"`
-	State     DeviceStatus `json:"status"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt *time.Time   `json:"updated_at"`
-	DeletedAt *time.Time   `json:"deleted_at"`
+	ID        uuid.UUID   `json:"id"`
+	Name      string      `json:"name"`
+	Brand     string      `json:"brand"`
+	State     DeviceState `json:"status"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt *time.Time  `json:"updated_at"`
+	DeletedAt *time.Time  `json:"deleted_at"`
 }

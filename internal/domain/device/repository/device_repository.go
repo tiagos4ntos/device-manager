@@ -14,7 +14,7 @@ type DeviceRepository interface {
 	CreateDevice(ctx context.Context, device *entity.Device) error
 	GetDeviceByID(ctx context.Context, id uuid.UUID) (entity.Device, error)
 	FullyUpdateDevice(ctx context.Context, device *entity.Device) error
-	UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceStatus) (entity.Device, error)
+	UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newState entity.DeviceState) (entity.Device, error)
 	DeleteDevice(ctx context.Context, id uuid.UUID) error
 	ListDevices(ctx context.Context) ([]entity.Device, error)
 }
@@ -120,7 +120,7 @@ func (r *postegresDeviceRepository) FullyUpdateDevice(ctx context.Context, devic
 	return nil
 }
 
-func (r *postegresDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceStatus) (entity.Device, error) {
+func (r *postegresDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceState) (entity.Device, error) {
 	var device entity.Device
 	query := `
 	UPDATE devices SET 

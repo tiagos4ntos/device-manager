@@ -109,7 +109,7 @@ func (mr *MockDeviceRepositoryMockRecorder) ListDevices(ctx interface{}) *gomock
 }
 
 // UpdateDeviceState mocks base method.
-func (m *MockDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceStatus) (entity.Device, error) {
+func (m *MockDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceState) (entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateDeviceState", ctx, deviceID, newStatus)
 	ret0, _ := ret[0].(entity.Device)
