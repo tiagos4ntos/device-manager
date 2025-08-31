@@ -127,7 +127,7 @@ func Test_Get_Device_ByID(t *testing.T) {
 	deviceGetByIdQuery := regexp.QuoteMeta(`
 	SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
-	WHERE id = $1;`)
+	WHERE id = $1 AND deleted_at IS NULL;`)
 
 	expectedDevice := makeExpectedDeviceRecord()
 
@@ -524,6 +524,7 @@ func Test_List_Devices(t *testing.T) {
 
 	deviceListQuery := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
+	WHERE deleted_at IS NULL
 	ORDER BY name;`)
 
 	type args struct {

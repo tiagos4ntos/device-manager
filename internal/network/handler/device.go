@@ -17,7 +17,7 @@ type DeviceHandler interface {
 	GetByID() echo.HandlerFunc
 	Create() echo.HandlerFunc
 	Update() echo.HandlerFunc
-	// Delete() echo.HandlerFunc
+	Delete() echo.HandlerFunc
 }
 
 type deviceHandler struct {
@@ -164,6 +164,27 @@ func (h *deviceHandler) Update() echo.HandlerFunc {
 			DeletedAt: updatedDevice.DeletedAt,
 		}
 		return c.JSON(http.StatusOK, result)
+	}
+}
+
+func (h *deviceHandler) Delete() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+
+		//validate id is not empty and is a valid uuid
+		deviceID, err := parseAndValidateDeviceId(id)
+		if err != nil {
+			return errorhandler.Handle(c, err)
+		}
+
+		// fetch device by id
+		err = h.deviceService.Delete(context.Background(), deviceID)
+
+		if err != nil {
+			return errorhandler.Handle(c, err)
+		}
+
+		return c.JSON(http.StatusNoContent, nil)
 	}
 }
 

@@ -61,7 +61,7 @@ func (r *postegresDeviceRepository) GetDeviceByID(ctx context.Context, id uuid.U
 	query := `
 	SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
-	WHERE id = $1;`
+	WHERE id = $1 AND deleted_at IS NULL;`
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -192,6 +192,7 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context) ([]entity.D
 
 	query := `SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
+	WHERE deleted_at IS NULL
 	ORDER BY name;`
 
 	stmt, err := r.db.PrepareContext(ctx, query)
