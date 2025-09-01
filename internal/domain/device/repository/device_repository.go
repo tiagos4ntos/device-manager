@@ -16,7 +16,7 @@ type DeviceRepository interface {
 	FullyUpdateDevice(ctx context.Context, device *entity.Device) error
 	UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newState entity.DeviceState) (entity.Device, error)
 	DeleteDevice(ctx context.Context, id uuid.UUID) error
-	ListDevices(ctx context.Context) ([]entity.Device, error)
+	ListDevices(ctx context.Context, params map[string]any) ([]entity.Device, error)
 }
 
 type postegresDeviceRepository struct {
@@ -187,12 +187,16 @@ func (r *postegresDeviceRepository) DeleteDevice(ctx context.Context, id uuid.UU
 	return nil
 }
 
-func (r *postegresDeviceRepository) ListDevices(ctx context.Context) ([]entity.Device, error) {
+func (r *postegresDeviceRepository) ListDevices(ctx context.Context, params map[string]any) ([]entity.Device, error) {
 	var devices []entity.Device
+
+	// build filter parameters
 
 	query := `SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
 	WHERE deleted_at IS NULL
+	AND ($1 IS NULL OR brand = $1)
+  	AND ($2 IS NULL OR state = $2)
 	ORDER BY name;`
 
 	stmt, err := r.db.PrepareContext(ctx, query)
@@ -201,7 +205,12 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context) ([]entity.D
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx)
+	stmtementParams := []interface{}{
+		params["brand"],
+		params["state"],
+	}
+
+	rows, err := stmt.QueryContext(ctx, stmtementParams...)
 	if err != nil {
 		return nil, err
 	}

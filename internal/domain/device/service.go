@@ -13,7 +13,7 @@ import (
 )
 
 type DeviceService interface {
-	List(ctx context.Context) ([]entity.Device, error)
+	List(ctx context.Context, params map[string]any) ([]entity.Device, error)
 	GetByID(ctx context.Context, id uuid.UUID) (entity.Device, error)
 	Create(ctx context.Context, device entity.Device) (entity.Device, error)
 	Update(ctx context.Context, device entity.Device) (entity.Device, error)
@@ -28,8 +28,8 @@ func NewDeviceService(repo repository.DeviceRepository) *deviceService {
 	return &deviceService{repo: repo}
 }
 
-func (s *deviceService) List(ctx context.Context) ([]entity.Device, error) {
-	devices, err := s.repo.ListDevices(ctx)
+func (s *deviceService) List(ctx context.Context, params map[string]any) ([]entity.Device, error) {
+	devices, err := s.repo.ListDevices(ctx, params)
 	if err != nil {
 		return nil, errors.NewDeviceError(errors.ErrInternal, "something went wrong while listing devices", err)
 	}

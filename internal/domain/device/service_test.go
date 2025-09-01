@@ -19,10 +19,15 @@ var errDatabaseGeneric = fmt.Errorf("some database error")
 func Test_List_Device(t *testing.T) {
 	type args struct {
 		context context.Context
+		params  map[string]any
 	}
 
 	testArgs := args{
 		context: context.TODO(),
+		params: map[string]any{
+			"brand": nil,
+			"state": nil,
+		},
 	}
 
 	tests := []struct {
@@ -53,6 +58,46 @@ func Test_List_Device(t *testing.T) {
 			wantErr:           nil,
 		},
 		{
+			name: "List Success Filtering by Brand Case",
+			testArgs: args{
+				context: context.TODO(),
+				params: map[string]any{
+					"brand": "Samsung",
+					"state": nil,
+				},
+			},
+			wantRepositoryResult: []entity.Device{
+				{
+					ID:    uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					Name:  "Galaxy S21",
+					Brand: "Samsung",
+					State: entity.InUse,
+				},
+			},
+			wantRepositoryErr: nil,
+			wantErr:           nil,
+		},
+		{
+			name: "List Success Filtering by State Case",
+			testArgs: args{
+				context: context.TODO(),
+				params: map[string]any{
+					"brand": nil,
+					"state": "available",
+				},
+			},
+			wantRepositoryResult: []entity.Device{
+				{
+					ID:    uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					Name:  "Iphone 13",
+					Brand: "Apple",
+					State: entity.Available,
+				},
+			},
+			wantRepositoryErr: nil,
+			wantErr:           nil,
+		},
+		{
 			name:                 "List Repository Error Case",
 			testArgs:             testArgs,
 			wantRepositoryResult: nil,
@@ -71,11 +116,11 @@ func Test_List_Device(t *testing.T) {
 
 			mockRepo.
 				EXPECT().
-				ListDevices(tt.testArgs.context).
+				ListDevices(tt.testArgs.context, tt.testArgs.params).
 				Return(tt.wantRepositoryResult, tt.wantRepositoryErr).
 				AnyTimes()
 
-			devices, err := service.List(tt.testArgs.context)
+			devices, err := service.List(tt.testArgs.context, tt.testArgs.params)
 			assert.Equal(t, tt.wantErr, err)
 			assert.Equal(t, tt.wantRepositoryResult, devices)
 		})

@@ -525,13 +525,20 @@ func Test_List_Devices(t *testing.T) {
 	deviceListQuery := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
 	WHERE deleted_at IS NULL
+	AND ($1 IS NULL OR brand = $1)
+  	AND ($2 IS NULL OR state = $2)
 	ORDER BY name;`)
 
 	type args struct {
 		context context.Context
+		params  map[string]any
 	}
 	testArgs := args{
 		context: context.TODO(),
+		params: map[string]any{
+			"brand": nil,
+			"state": nil,
+		},
 	}
 
 	testCases := []struct {
@@ -547,6 +554,7 @@ func Test_List_Devices(t *testing.T) {
 				mock.ExpectPrepare(deviceListQuery).
 					WillBeClosed().
 					ExpectQuery().
+					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
@@ -566,6 +574,68 @@ func Test_List_Devices(t *testing.T) {
 				{
 					ID:        uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"),
 					Name:      "IPhone 15",
+					Brand:     "Apple",
+					State:     entity.InUse,
+					CreatedAt: createdAt,
+					UpdatedAt: &createdAt,
+				},
+			},
+		},
+		{
+			name: "List Devices filtering Brand Success Case",
+			sqlMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectPrepare(deviceListQuery).
+					WillBeClosed().
+					ExpectQuery().
+					WithArgs("Apple", nil).
+					WillReturnRows(
+						sqlmock.
+							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
+							AddRow(uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"), "IPhone 15", "Apple", entity.InUse, createdAt, createdAt, nil))
+			},
+			args: args{
+				context: context.TODO(),
+				params: map[string]any{
+					"brand": "Apple",
+					"state": nil,
+				},
+			},
+			wantedErr: nil,
+			wantedResult: []entity.Device{
+				{
+					ID:        uuid.MustParse("c60dceb7-60c8-4d74-8d7c-cd34a0b4ce19"),
+					Name:      "IPhone 15",
+					Brand:     "Apple",
+					State:     entity.InUse,
+					CreatedAt: createdAt,
+					UpdatedAt: &createdAt,
+				},
+			},
+		},
+		{
+			name: "List Devices filtering Brand and State Success Case",
+			sqlMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectPrepare(deviceListQuery).
+					WillBeClosed().
+					ExpectQuery().
+					WithArgs("Apple", "in-use").
+					WillReturnRows(
+						sqlmock.
+							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
+							AddRow(uuid.MustParse("a60dceb7-60c8-4d74-8d7c-cd34a0b4ce11"), "IPhone 16", "Apple", entity.InUse, createdAt, createdAt, nil))
+			},
+			args: args{
+				context: context.TODO(),
+				params: map[string]any{
+					"brand": "Apple",
+					"state": "in-use",
+				},
+			},
+			wantedErr: nil,
+			wantedResult: []entity.Device{
+				{
+					ID:        uuid.MustParse("a60dceb7-60c8-4d74-8d7c-cd34a0b4ce11"),
+					Name:      "IPhone 16",
 					Brand:     "Apple",
 					State:     entity.InUse,
 					CreatedAt: createdAt,
@@ -601,6 +671,7 @@ func Test_List_Devices(t *testing.T) {
 				mock.ExpectPrepare(deviceListQuery).
 					WillBeClosed().
 					ExpectQuery().
+					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id"}).
@@ -616,6 +687,7 @@ func Test_List_Devices(t *testing.T) {
 				mock.ExpectPrepare(deviceListQuery).
 					WillBeClosed().
 					ExpectQuery().
+					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
@@ -638,7 +710,7 @@ func Test_List_Devices(t *testing.T) {
 
 			tt.sqlMock(mock)
 
-			devices, err := deviceRepository.ListDevices(tt.args.context)
+			devices, err := deviceRepository.ListDevices(tt.args.context, tt.args.params)
 
 			assert.Equal(tt.wantedErr, err)
 			assert.Equal(tt.wantedResult, devices)

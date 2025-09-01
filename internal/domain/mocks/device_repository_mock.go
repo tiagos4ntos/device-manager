@@ -94,31 +94,31 @@ func (mr *MockDeviceRepositoryMockRecorder) GetDeviceByID(ctx, id interface{}) *
 }
 
 // ListDevices mocks base method.
-func (m *MockDeviceRepository) ListDevices(ctx context.Context) ([]entity.Device, error) {
+func (m *MockDeviceRepository) ListDevices(ctx context.Context, params map[string]any) ([]entity.Device, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListDevices", ctx)
+	ret := m.ctrl.Call(m, "ListDevices", ctx, params)
 	ret0, _ := ret[0].([]entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListDevices indicates an expected call of ListDevices.
-func (mr *MockDeviceRepositoryMockRecorder) ListDevices(ctx interface{}) *gomock.Call {
+func (mr *MockDeviceRepositoryMockRecorder) ListDevices(ctx, params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDevices", reflect.TypeOf((*MockDeviceRepository)(nil).ListDevices), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDevices", reflect.TypeOf((*MockDeviceRepository)(nil).ListDevices), ctx, params)
 }
 
 // UpdateDeviceState mocks base method.
-func (m *MockDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newStatus entity.DeviceState) (entity.Device, error) {
+func (m *MockDeviceRepository) UpdateDeviceState(ctx context.Context, deviceID uuid.UUID, newState entity.DeviceState) (entity.Device, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDeviceState", ctx, deviceID, newStatus)
+	ret := m.ctrl.Call(m, "UpdateDeviceState", ctx, deviceID, newState)
 	ret0, _ := ret[0].(entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateDeviceState indicates an expected call of UpdateDeviceState.
-func (mr *MockDeviceRepositoryMockRecorder) UpdateDeviceState(ctx, deviceID, newStatus interface{}) *gomock.Call {
+func (mr *MockDeviceRepositoryMockRecorder) UpdateDeviceState(ctx, deviceID, newState interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeviceState", reflect.TypeOf((*MockDeviceRepository)(nil).UpdateDeviceState), ctx, deviceID, newStatus)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeviceState", reflect.TypeOf((*MockDeviceRepository)(nil).UpdateDeviceState), ctx, deviceID, newState)
 }

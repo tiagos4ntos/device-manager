@@ -36,12 +36,29 @@ func NewDeviceHandler(service device.DeviceService) DeviceHandler {
 // @Tags devices
 // @Accept json
 // @Produce json
+// @Param        brand   path      string  false  "Brand name: eg. Apple"
+// @Param        state   path      string  false  "State, must be one of: available, in-use, inactive"
 // @Success 200 {array} dto.DeviceResponse
 // @Failure 500 {object} errors.DefaultErrorResult
 // @Router /devices [get]
 func (h *deviceHandler) List() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		devices, err := h.deviceService.List(context.Background())
+
+		// Extract query parameters
+		brandParam := c.QueryParam("brand")
+		stateParam := c.QueryParam("state")
+
+		if !validateListDeviceStateFilter(stateParam) {
+			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid state filter, must be one of: available, in-use, inactive", nil))
+		}
+
+		// build filter parameters
+		params := map[string]any{
+			"brand": getStringOrNull(brandParam),
+			"state": getStringOrNull(stateParam),
+		}
+
+		devices, err := h.deviceService.List(context.Background(), params)
 
 		if err != nil {
 			return errorhandler.Handle(c, err)
@@ -249,4 +266,23 @@ func parseAndValidateDeviceId(id string) (uuid.UUID, error) {
 		return uuid.Nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid device id format, must be an uuid", nil)
 	}
 	return deviceID, nil
+}
+
+func validateListDeviceStateFilter(stateParam string) bool {
+	if stateParam != "" {
+		validStates := map[string]bool{
+			"available": true,
+			"in-use":    true,
+			"inactive":  true,
+		}
+		return validStates[stateParam]
+	}
+	return false
+}
+
+func getStringOrNull(value string) interface{} {
+	if value == "" {
+		return nil
+	}
+	return value
 }
