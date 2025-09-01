@@ -8,7 +8,7 @@ This project provides an API for managing an inventory of devices and its state 
 - Query all devices and filter by ID, Brand or State
 
 ## Requirements
-
+- [Golang](https://go.dev/dl/) v1.25.0
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 - [Make](https://www.gnu.org/software/make/)
@@ -87,20 +87,24 @@ make build run logs
 
 If you need, it's possible to use `make clean` to erase the docker container to build again the image.
 
-## Principal Makefile Commands
+## All Makefile Commands
 
-| Command               | Description                                      |
-|-----------------------|--------------------------------------------------|
-| `make build`          | Build Docker image of the device manager API     |
-| `make run`            | Run API container                                |
-| `make status`         | Show container status                            |
-| `make logs`           | Tail logs of API container                       |
-| `make test`           | Run Go tests in Docker container                 |
-| `make test/local`     | Run Go tests locally                             |
-| `make stop`           | Stop API container                               |
-| `make clean`          | Remove the API containers                        |
-| `make run/postgres`   | Run Postgres as a dependency for the API         |
-| `make stop/postgres`  | Stop Postgres as a dependency for the API        |
+| Command               | Description                                                           |
+|-----------------------|-----------------------------------------------------------------------|
+| `make build`          | Build Docker image of the device manager API                          |
+| `make run`            | Run API container                                                     |
+| `make status`         | Show container status                                                 |
+| `make logs`           | Tail logs of API container                                            |
+| `make test`           | Run Go tests in Docker container showing % coverage                   |
+| `make stop`           | Stop API container                                                    |
+| `make clean`          | Remove the API containers                                             |
+| `make run/postgres`   | Run Postgres as a dependency for the API                              |
+| `make stop/postgres`  | Stop Postgres as a dependency for the API                             |
+
+
+## Testing the API
+
+There's a [Postman Collection](docs/device-manager.postman_collection.json) and [Environment](docs/local.postman_environment.json) that can be imported to test each api endpoint.
 
 
 ## TO DOs
@@ -108,7 +112,11 @@ If you need, it's possible to use `make clean` to erase the docker container to 
 - Implement unit tests in network layer
 - Implement integrated tests with newman
 - Implement Api Key Authentication
-- Refactoring unit tests to turn more simple and reusable 
+- Refactoring unit tests to turn more simple and reusable
+- Implement Rate Limit
+- Implement Cache
+- Migrate from lib/pq to pgx
+- Implement pagination on List Devices endpoint
 
 
 ## API Documentation
