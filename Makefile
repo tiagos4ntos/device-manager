@@ -1,4 +1,4 @@
-.PHONY: build run run/postgres status stop stop/postgres logs test test/local clean help
+.PHONY: build run run/postgres status stop stop/postgres logs test clean help
 
 SERVICE_NAME=api
 VERSION=$(shell cat VERSION)
@@ -29,10 +29,7 @@ logs:
 	docker compose --project-name=devicemanager logs -f ${SERVICE_NAME}
 
 test:
-	docker run --rm -v ${PWD}:/app -w /app ${SERVICE_NAME}:local sh -c 'go test -v ./...'
-
-test/local:
-	go test -covermode=atomic ./internal/... -coverprofile=cover.out  && go tool cover -func=cover.out
+	docker run --rm -v ${PWD}:/app -w /app ${SERVICE_NAME}:local sh -c 'go test -cover -v ./...'
 
 clean:
 	docker rmi -f ${SERVICE_NAME}:local 2> /dev/null || true
@@ -45,7 +42,6 @@ help:
 	@echo "  make status    		- Show container status"
 	@echo "  make logs      		- Tail logs of api container"
 	@echo "  make test      		- Run Go tests on docker container"
-	@echo "  make test/local		- Run Go tests locally"
 	@echo "  make stop      		- Stop api container"
 	@echo "  make stop/postgres		- Stop postgres as dependency to run the api"
 	@echo "  make clean     		- Remove the api containers"
