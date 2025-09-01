@@ -1,0 +1,112 @@
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/tiagos4ntos/device-manager/internal/config"
+	"github.com/tiagos4ntos/device-manager/internal/database"
+	"github.com/tiagos4ntos/device-manager/internal/domain/device"
+	"github.com/tiagos4ntos/device-manager/internal/domain/device/repository"
+	"github.com/tiagos4ntos/device-manager/internal/network/handler"
+	"github.com/tiagos4ntos/device-manager/internal/network/router"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/tiagos4ntos/device-manager/docs"
+)
+
+// @title Device Manager API
+// @version 0.0.1-beta
+// @description API for managing an inventory of mobile devices.
+// @conact.name Tiago Santos
+// @contact.url https://tiagos4ntos.github.io
+// @contact.email tiago482@gmail.com
+// @license.name APACHE 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @termsOfService http://swagger.io/terms/
+// @host localhost:8080
+// @BasePath /
+
+func main() {
+	cfg := config.LoadConfig()
+
+	log.Printf("%v:starting...", cfg.AppName)
+
+	// validate config
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("invalid configuration: %v", err)
+	}
+
+	// initialize database connection
+	psqlConn, err := database.NewPostgresDB(cfg.DatabaseHost, cfg.DatabasePort, cfg.DatabaseUser, cfg.DatabasePass, cfg.DatabaseName)
+	if err != nil {
+		log.Fatalf("failed to connect to database: (%v) ", err.Error())
+	}
+	defer psqlConn.Close()
+
+	// run database migrations
+	database.MigrateUp(psqlConn)
+
+	// initialize device repository
+	deviceRepository := repository.NewDeviceRepository(psqlConn)
+
+	// initialize device service
+	deviceService := device.NewDeviceService(deviceRepository)
+
+	// initialize echo server
+	e := echo.New()
+
+	// echo settings, middlewares and documentation endpoint
+	configureEcho(e, cfg)
+
+	// initialize device handler
+	deviceHandler := handler.NewDeviceHandler(deviceService)
+
+	router.RegisterRoutes(e, deviceHandler)
+
+	// create a context that cancels on SIGINT/SIGTERM/os.Interrupt
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	defer stop()
+
+	go func() {
+		log.Printf("%v:ready...", cfg.AppName)
+		if err := e.Start(":" + cfg.ServerPort); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("Server error:", err)
+		}
+	}()
+	<-ctx.Done()
+
+	e.Logger.Infof("Gracefully shuting down %v...", cfg.AppName)
+	if err := e.Shutdown(context.Background()); err != nil {
+		e.Logger.Fatal("Shutdown failed:", err)
+	}
+}
+
+func configureEcho(e *echo.Echo, cfg *config.Config) {
+	e.Debug = false
+	e.DisableHTTP2 = true
+	e.HideBanner = true
+	e.HidePort = true
+	e.Server.ReadTimeout = time.Duration(cfg.HttpTimeout) * time.Second
+	e.Server.WriteTimeout = time.Duration(cfg.HttpTimeout) * time.Second
+
+	e.Use(middleware.RequestID())
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: time.Duration(cfg.HttpTimeout) * time.Second,
+	}))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+	}))
+
+	e.GET("/api/*", echoSwagger.WrapHandler)
+}
