@@ -17,7 +17,7 @@ COPY . .
 RUN swag init -g ./cmd/server.go
 
 # Build the Go binary
-RUN go build -a -tags netgo -o main ./cmd/server.go
+RUN go build -a -o main ./cmd/server.go
 
 RUN chmod +x main
 
