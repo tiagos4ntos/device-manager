@@ -102,6 +102,13 @@ If you need, it's possible to use `make clean` to erase the docker container to 
 | `make stop/postgres`  | Stop Postgres as a dependency for the API                             |
 
 
+## API Documentation
+
+Once the application is running, you can explore the API documentation and interact with the endpoints directly via Swagger UI at: http://localhost:8080/api/index.html
+
+See [API Docs](docs/api.md) for endpoints and usage details.
+
+
 ## Testing the API
 
 There's a [Postman Collection](docs/device-manager.postman_collection.json) and [Environment](docs/local.postman_environment.json) that can be imported to test each api endpoint.
@@ -119,9 +126,6 @@ There's a [Postman Collection](docs/device-manager.postman_collection.json) and 
 - Implement pagination on List Devices endpoint
 
 
-## API Documentation
-
-See [API Docs](docs/api.md) for endpoints and usage.
 
 ## License
 
