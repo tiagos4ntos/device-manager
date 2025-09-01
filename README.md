@@ -89,18 +89,27 @@ If you need, it's possible to use `make clean` to erase the docker container to 
 
 ## Principal Makefile Commands
 
-| Command              | Description                                      |
-|----------------------|--------------------------------------------------|
-| `make build`         | Build Docker image of the device manager API     |
-| `make run`           | Run API container                                |
-| `make status`        | Show container status                            |
-| `make logs`          | Tail logs of API container                       |
-| `make test`          | Run Go tests in Docker container                 |
-| `make test/local`  | Run Go tests locally                             |
-| `make stop`          | Stop API container                               |
-| `make clean`         | Remove the API containers                        |
-| `make run/postgres`  | Run Postgres as a dependency for the API         |
-| `make stop/postgres` | Stop Postgres as a dependency for the API        |
+| Command               | Description                                      |
+|-----------------------|--------------------------------------------------|
+| `make build`          | Build Docker image of the device manager API     |
+| `make run`            | Run API container                                |
+| `make status`         | Show container status                            |
+| `make logs`           | Tail logs of API container                       |
+| `make test`           | Run Go tests in Docker container                 |
+| `make test/local`     | Run Go tests locally                             |
+| `make stop`           | Stop API container                               |
+| `make clean`          | Remove the API containers                        |
+| `make run/postgres`   | Run Postgres as a dependency for the API         |
+| `make stop/postgres`  | Stop Postgres as a dependency for the API        |
+
+
+## TO DOs
+
+- Implement unit tests in network layer
+- Implement integrated tests with newman
+- Implement Api Key Authentication
+- Refactoring unit tests to turn more simple and reusable 
+
 
 ## API Documentation
 

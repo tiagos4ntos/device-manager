@@ -12,6 +12,13 @@ API for managing an inventory of mobile devices.
 
 Get all devices
 
+#### Parameters
+
+| Name | In | Required | Description | Type |
+|------|----|----------|-------------|------|
+| `brand` | path | No | Brand name: eg. Apple | - |
+| `state` | path | No | State, must be one of: available, in-use, inactive | - |
+
 #### Responses
 
 | Status Code | Description | Schema |
