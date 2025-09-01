@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/tiagos4ntos/device-manager/internal/domain/device/entity"
@@ -187,17 +189,10 @@ func (r *postegresDeviceRepository) DeleteDevice(ctx context.Context, id uuid.UU
 	return nil
 }
 
-func (r *postegresDeviceRepository) ListDevices(ctx context.Context, params map[string]any) ([]entity.Device, error) {
+func (r *postegresDeviceRepository) ListDevices(ctx context.Context, filterBy map[string]any) ([]entity.Device, error) {
 	var devices []entity.Device
 
-	// build filter parameters
-
-	query := `SELECT id, name, brand, state, created_at, updated_at, deleted_at
-	FROM devices
-	WHERE deleted_at IS NULL
-	AND ($1 IS NULL OR brand = $1)
-  	AND ($2 IS NULL OR state = $2)
-	ORDER BY name;`
+	query := buildListDeviceQueryWithParams(filterBy)
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -205,12 +200,7 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context, params map[
 	}
 	defer stmt.Close()
 
-	stmtementParams := []interface{}{
-		params["brand"],
-		params["state"],
-	}
-
-	rows, err := stmt.QueryContext(ctx, stmtementParams...)
+	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -239,4 +229,25 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context, params map[
 	}
 
 	return devices, nil
+}
+
+func buildListDeviceQueryWithParams(filterBy map[string]any) string {
+	queryFilters := []string{}
+
+	if len(filterBy) > 0 {
+		if brand, ok := filterBy["brand"].(string); ok && brand != "" {
+			queryFilters = append(queryFilters, fmt.Sprintf("AND lower(brand) = '%v'", strings.ToLower(brand)))
+		}
+
+		if state, ok := filterBy["state"].(string); ok && state != "" {
+			queryFilters = append(queryFilters, fmt.Sprintf("AND state = '%v'", strings.ToLower(state)))
+		}
+	}
+
+	baseQuery := `SELECT id, name, brand, state, created_at, updated_at, deleted_at
+	FROM devices
+	WHERE deleted_at IS NULL %v
+	ORDER BY name;`
+
+	return fmt.Sprintf(baseQuery, strings.Join(queryFilters, " "))
 }

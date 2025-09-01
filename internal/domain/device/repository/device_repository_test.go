@@ -522,11 +522,19 @@ func Test_List_Devices(t *testing.T) {
 	assert := assert.New(t)
 	createdAt := lo.Must(time.Parse(time.DateTime, "2025-08-31 15:01:02"))
 
-	deviceListQuery := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
+	deviceListQueryWithouFilter := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
 	FROM devices
 	WHERE deleted_at IS NULL
-	AND ($1 IS NULL OR brand = $1)
-  	AND ($2 IS NULL OR state = $2)
+	ORDER BY name;`)
+
+	deviceListQueryFilterBrand := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
+	FROM devices
+	WHERE deleted_at IS NULL AND lower(brand) = 'apple'
+	ORDER BY name;`)
+
+	deviceListQueryFilterBrandAndState := regexp.QuoteMeta(`SELECT id, name, brand, state, created_at, updated_at, deleted_at
+	FROM devices
+	WHERE deleted_at IS NULL AND lower(brand) = 'apple' AND state = 'in-use'
 	ORDER BY name;`)
 
 	type args struct {
@@ -551,10 +559,9 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices Success Case",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryWithouFilter).
 					WillBeClosed().
 					ExpectQuery().
-					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
@@ -584,10 +591,9 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices filtering Brand Success Case",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryFilterBrand).
 					WillBeClosed().
 					ExpectQuery().
-					WithArgs("Apple", nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
@@ -596,7 +602,7 @@ func Test_List_Devices(t *testing.T) {
 			args: args{
 				context: context.TODO(),
 				params: map[string]any{
-					"brand": "Apple",
+					"brand": "apple",
 					"state": nil,
 				},
 			},
@@ -615,10 +621,9 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices filtering Brand and State Success Case",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryFilterBrandAndState).
 					WillBeClosed().
 					ExpectQuery().
-					WithArgs("Apple", "in-use").
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).
@@ -646,7 +651,7 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices  Fails on Prepare Statement",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryWithouFilter).
 					WillReturnError(fmt.Errorf("some database error"))
 			},
 			args:         testArgs,
@@ -656,7 +661,7 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices Fails when query",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryWithouFilter).
 					WillBeClosed().
 					ExpectQuery().
 					WillReturnError(fmt.Errorf("some database error"))
@@ -668,10 +673,9 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices Fails on Row Scan",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryWithouFilter).
 					WillBeClosed().
 					ExpectQuery().
-					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id"}).
@@ -684,10 +688,9 @@ func Test_List_Devices(t *testing.T) {
 		{
 			name: "List Devices Fails on rows.Error",
 			sqlMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectPrepare(deviceListQuery).
+				mock.ExpectPrepare(deviceListQueryWithouFilter).
 					WillBeClosed().
 					ExpectQuery().
-					WithArgs(nil, nil).
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"id", "name", "brand", "state", "created_at", "updated_at", "deleted_at"}).

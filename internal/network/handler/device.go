@@ -48,7 +48,7 @@ func (h *deviceHandler) List() echo.HandlerFunc {
 		brandParam := c.QueryParam("brand")
 		stateParam := c.QueryParam("state")
 
-		if !validateListDeviceStateFilter(stateParam) {
+		if stateParam != "" && !validateListDeviceStateFilter(stateParam) {
 			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid state filter, must be one of: available, in-use, inactive", nil))
 		}
 
@@ -269,15 +269,12 @@ func parseAndValidateDeviceId(id string) (uuid.UUID, error) {
 }
 
 func validateListDeviceStateFilter(stateParam string) bool {
-	if stateParam != "" {
-		validStates := map[string]bool{
-			"available": true,
-			"in-use":    true,
-			"inactive":  true,
-		}
-		return validStates[stateParam]
+	validStates := map[string]bool{
+		"available": true,
+		"in-use":    true,
+		"inactive":  true,
 	}
-	return false
+	return validStates[stateParam]
 }
 
 func getStringOrNull(value string) interface{} {
