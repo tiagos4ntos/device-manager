@@ -2,7 +2,11 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -43,19 +47,9 @@ func NewDeviceHandler(service device.DeviceService) DeviceHandler {
 // @Router /devices [get]
 func (h *deviceHandler) List() echo.HandlerFunc {
 	return func(c echo.Context) error {
-
-		// Extract query parameters
-		brandParam := c.QueryParam("brand")
-		stateParam := c.QueryParam("state")
-
-		if stateParam != "" && !validateListDeviceStateFilter(stateParam) {
-			return errorhandler.Handle(c, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid state filter, must be one of: available, in-use, inactive", nil))
-		}
-
-		// build filter parameters
-		params := map[string]any{
-			"brand": getStringOrNull(brandParam),
-			"state": getStringOrNull(stateParam),
+		params, err := validateAndParseListParams(c)
+		if err != nil {
+			return errorhandler.Handle(c, err)
 		}
 
 		devices, err := h.deviceService.List(context.Background(), params)
@@ -98,7 +92,7 @@ func (h *deviceHandler) GetByID() echo.HandlerFunc {
 		id := c.Param("id")
 
 		//validate id is not empty and is a valid uuid
-		deviceID, err := parseAndValidateDeviceId(id)
+		deviceID, err := validateAndParseDeviceId(id)
 		if err != nil {
 			return errorhandler.Handle(c, err)
 		}
@@ -186,7 +180,7 @@ func (h *deviceHandler) Update() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
-		deviceID, err := parseAndValidateDeviceId(id)
+		deviceID, err := validateAndParseDeviceId(id)
 		if err != nil {
 			return errorhandler.Handle(c, err)
 		}
@@ -241,7 +235,7 @@ func (h *deviceHandler) Delete() echo.HandlerFunc {
 		id := c.Param("id")
 
 		//validate id is not empty and is a valid uuid
-		deviceID, err := parseAndValidateDeviceId(id)
+		deviceID, err := validateAndParseDeviceId(id)
 		if err != nil {
 			return errorhandler.Handle(c, err)
 		}
@@ -257,7 +251,47 @@ func (h *deviceHandler) Delete() echo.HandlerFunc {
 	}
 }
 
-func parseAndValidateDeviceId(id string) (uuid.UUID, error) {
+func validateAndParseListParams(c echo.Context) (map[string]any, error) {
+	allowedParams := map[string]bool{
+		"brand": true,
+		"state": true,
+	}
+
+	parsedQuery, err := url.ParseQuery(c.Request().URL.RawQuery)
+	if err != nil {
+		fmt.Println(err)
+		return nil, errorhandler.NewApiError(errorhandler.ErrInvalid, fmt.Sprintf("invalid query string: %v", err.Error()), nil)
+	}
+
+	for param := range parsedQuery {
+		if !allowedParams[param] {
+			return nil, errorhandler.NewApiError(errorhandler.ErrInvalid, fmt.Sprintf("invalid parameter: %s", param), nil)
+		}
+	}
+
+	if len(c.QueryParams()) <= 0 {
+		return map[string]any{}, nil
+	}
+
+	brandParam := c.QueryParam("brand")
+	stateParam := c.QueryParam("state")
+
+	if strings.Contains(c.Request().URL.String(), "brand=") && (brandParam == "" || !hasValidValue(brandParam)) {
+		return nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid brand filter", nil)
+	}
+
+	if stateParam != "" && !validateListDeviceStateFilter(stateParam) {
+		return nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "invalid state filter, must be one of: available, in-use, inactive", nil)
+	}
+
+	return map[string]any{
+		"brand": getStringOrNull(brandParam),
+		"state": getStringOrNull(stateParam),
+	}, nil
+
+}
+
+func validateAndParseDeviceId(id string) (uuid.UUID, error) {
 	if id == "" {
 		return uuid.Nil, errorhandler.NewApiError(errorhandler.ErrInvalid, "you must inform the device id", nil)
 	}
@@ -282,4 +316,9 @@ func getStringOrNull(value string) interface{} {
 		return nil
 	}
 	return value
+}
+
+func hasValidValue(param string) bool {
+	validParam := regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	return validParam.MatchString(param)
 }
