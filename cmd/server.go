@@ -97,6 +97,7 @@ func configureEcho(e *echo.Echo, cfg *config.Config) {
 	e.Server.ReadTimeout = time.Duration(cfg.HttpTimeout) * time.Second
 	e.Server.WriteTimeout = time.Duration(cfg.HttpTimeout) * time.Second
 
+	e.Use(middleware.Secure())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
