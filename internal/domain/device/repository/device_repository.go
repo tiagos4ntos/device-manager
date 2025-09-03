@@ -192,7 +192,7 @@ func (r *postegresDeviceRepository) DeleteDevice(ctx context.Context, id uuid.UU
 func (r *postegresDeviceRepository) ListDevices(ctx context.Context, filterBy map[string]any) ([]entity.Device, error) {
 	var devices []entity.Device
 
-	query := buildListDeviceQueryWithParams(filterBy)
+	query, params := buildListDeviceQueryWithParams(filterBy)
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -200,7 +200,7 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context, filterBy ma
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx)
+	rows, err := stmt.QueryContext(ctx, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -231,17 +231,23 @@ func (r *postegresDeviceRepository) ListDevices(ctx context.Context, filterBy ma
 	return devices, nil
 }
 
-func buildListDeviceQueryWithParams(filterBy map[string]any) string {
+func buildListDeviceQueryWithParams(filterBy map[string]any) (string, []any) {
 	queryFilters := []string{}
+	params := make([]any, 0)
 
-	if len(filterBy) > 0 {
-		if brand, ok := filterBy["brand"].(string); ok && brand != "" {
-			queryFilters = append(queryFilters, fmt.Sprintf("AND lower(brand) = '%v'", strings.ToLower(brand)))
-		}
+	fieldPrefix := map[string]string{
+		"brand": "lower(brand)",
+		"state": "state",
+	}
 
-		if state, ok := filterBy["state"].(string); ok && state != "" {
-			queryFilters = append(queryFilters, fmt.Sprintf("AND state = '%v'", strings.ToLower(state)))
+	counter := 1
+	for field, value := range filterBy {
+		if value == nil {
+			continue
 		}
+		queryFilters = append(queryFilters, fmt.Sprintf("AND %v = $%v", fieldPrefix[field], counter))
+		params = append(params, value)
+		counter++
 	}
 
 	baseQuery := `SELECT id, name, brand, state, created_at, updated_at, deleted_at
@@ -249,5 +255,5 @@ func buildListDeviceQueryWithParams(filterBy map[string]any) string {
 	WHERE deleted_at IS NULL %v
 	ORDER BY name;`
 
-	return fmt.Sprintf(baseQuery, strings.Join(queryFilters, " "))
+	return fmt.Sprintf(baseQuery, strings.Join(queryFilters, " ")), params
 }
